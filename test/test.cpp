@@ -3,82 +3,63 @@
 
 // change if you choose to use a different header name
 #include "CampusCompass.h"
+#include "WeightedGraph.hpp"
 
-using namespace std;
+TEST_CASE("Checking CSV importation") {
+    WeightedGraph graph;
+    graph.parseCSV("../data/edges.csv","..data/classes.csv");
 
-// the syntax for defining a test is below. It is important for the name to be
-// unique, but you can group multiple tests with [tags]. A test can have
-// [multiple][tags] using that syntax.
-TEST_CASE("Example Test Name - Change me!", "[tag]") {
-  // instantiate any class members that you need to test here
-  int one = 1;
+    REQUIRE(!graph.checkEdge(1,2).first);
+    REQUIRE(graph.checkEdge(1,2).second == 3);
 
-  // anything that evaluates to false in a REQUIRE block will result in a
-  // failing test
-  REQUIRE(one == 0); // fix me!
+    REQUIRE(!graph.checkEdge(6,16).first);
+    REQUIRE(graph.checkEdge(6,16).second == 2);
 
-  // all REQUIRE blocks must evaluate to true for the whole test to pass
-  REQUIRE(false); // also fix me!
+    REQUIRE(graph.checkEdge(6,1).first);
+    REQUIRE(graph.checkEdge(6,1).second == -1);
+
+    graph.toggleEdgeClosure(1,50);
+    REQUIRE(graph.checkEdge(1,50).first);
+    REQUIRE(graph.checkEdge(1,50).second == 4);
 }
 
-TEST_CASE("Test 2", "[tag]") {
-  // you can also use "sections" to share setup code between tests, for example:
-  int one = 1;
+TEST_CASE("Test Insert Validation") {
+    CampusCompass test;
 
-  SECTION("num is 2") {
-    int num = one + 1;
-    REQUIRE(num == 2);
-  };
+    // correct
+    REQUIRE(test.insert("Namey", "12345678", 1, {"COP3504", "MAC2311"}));
+    REQUIRE(test.insert("Name y", "84845315", 2, {"COP3504", "MAC2311"}));
 
-  SECTION("num is 3") {
-    int num = one + 2;
-    REQUIRE(num == 3);
-  };
+    REQUIRE(!test.insert("Namey", "00000001", 1, {"COP3504", "MAC2311C"}));
+    REQUIRE(!test.insert("Namey", "00000002", 1, {"COP35a4", "MAC2311"}));
+    REQUIRE(!test.insert("Namey", "00000003", 1, {"COP3504", "MAC23115"}));
+    REQUIRE(!test.insert("Namey", "00000004", 1, {}));
+    REQUIRE(!test.insert("Namey", "00000005", 1, {"COP3504","COT3100", "COP3530", "PHY2048","PHY2049","IDS3935"}));
+    REQUIRE(!test.insert("Namey", "00000006", 1, {"COP3504","COT3100", "COP3530", "PHY2048","PHY2049","IDS3935","MAP2302"}));
+    REQUIRE(!test.insert("Namey", "00000007", 1, {"COP3504","COP3504"}));
 
-  // each section runs the setup code independently to ensure that they don't
-  // affect each other
+    REQUIRE(!test.insert("Namey 7", "00000008", 1, {"COP3504", "MAC2311"}));
+
 }
 
-// Refer to Canvas for a list of required tests. 
-// We encourage you to write more than required to ensure proper functionality, but only the ones on Canvas will be graded.
+TEST_CASE("Testing uniqueness") {
+    CampusCompass test;
 
-// See the following for an example of how to easily test your output.
-// Note that while this works, I recommend also creating plenty of unit tests for particular functions within your code.
-// This pattern should only be used for final, end-to-end testing.
-
-// This uses C++ "raw strings" and assumes your CampusCompass outputs a string with
-//   the same thing you print.
-TEST_CASE("Example CampusCompass Output Test", "[flag]") {
-  // the following is a "raw string" - you can write the exact input (without
-  //   any indentation!) and it should work as expected
-  // this is based on the input and output of the first public test case
-  string input = R"(6
-insert "Student A" 10000001 1 1 COP3502
-insert "Student B" 10000002 1 1 COP3502
-insert "Student C" 10000003 1 2 COP3502 MAC2311
-dropClass 10000001 COP3502
-remove 10000001
-removeClass COP3502
-)";
-
-  string expectedOutput = R"(successful
-successful
-successful
-successful
-unsuccessful
-2
-)";
-
-  string actualOutput;
-
-  // somehow pass your input into your CampusCompass and parse it to call the
-  // correct functions, for example:
-  /*
-  CampusCompass c;
-  c.parseInput(input)
-  // this would be some function that sends the output from your class into a string for use in testing
-  actualOutput = c.getStringRepresentation()
-  */
-
-  REQUIRE(actualOutput == expectedOutput);
+    // we have a student
+    REQUIRE(test.insert("Namey", "12345678", 1, {"COP3504", "MAC2311"}));
+    // cant have a duplicate student
+    REQUIRE(!test.insert("Namey", "12345678", 1, {"COP3504", "MAC2311"}));
+    // cant have a student with a non-existent home
+    REQUIRE(!test.insert("Namey", "12345608", -1, {"COP3504", "MAC2311"}));
 }
+
+TEST_CASE("Testing remove") {
+    CampusCompass test;
+
+    REQUIRE(test.insert("Namey", "12345678", 1, {"COP3504", "MAC2311"}));
+    REQUIRE(test.remove("12345678"));
+    REQUIRE(test.insert("Namey", "12345678", 1, {"COP3504", "MAC2311"}));
+
+
+}
+
