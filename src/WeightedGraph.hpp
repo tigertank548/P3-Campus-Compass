@@ -20,6 +20,8 @@ public:
     // returns if the edge is closed and what the weight is
     std::pair<bool, int> checkEdge(int from, int to);
 
+    bool nodeExists(int id);
+
     bool parseCSV(const std::string &edges_filepath, const std::string &classes_filepath);
 
     //TODO:: have a function that makes the subgraph and finds a mst... i think have an mst function that takes in some sort of datastructure of node pointers.

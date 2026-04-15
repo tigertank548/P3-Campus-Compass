@@ -1,4 +1,4 @@
-#include "CampusCompass.h"
+#include "CampusCompass.hpp"
 
 #include <algorithm>
 #include <string>
@@ -9,6 +9,10 @@
 CampusCompass::CampusCompass() {
     parseCSV("../data/edges.csv","../data/classes.csv");
 }
+CampusCompass::CampusCompass(const WeightedGraph& graph) {
+    this->graph = graph;
+}
+
 
 bool CampusCompass::insert(std::string name, std::string studentID, const int home, const std::unordered_set<std::string>& courseCodes) {
     if (studentID.length() != 8)
@@ -21,6 +25,8 @@ bool CampusCompass::insert(std::string name, std::string studentID, const int ho
     }) && !name.empty())
         return false;
     if (courseCodes.size() < 1 || courseCodes.size() > 6)
+        return false;
+    if (!graph.nodeExists(home))
         return false;
 
     // student doesnt already exist
@@ -80,10 +86,3 @@ bool CampusCompass::parseCSV(const std::string &edges_filepath, const std::strin
     return graph.parseCSV(edges_filepath,classes_filepath);
 }
 
-bool CampusCompass::parseCommand(const std::string &command) {
-    // do whatever regex you need to parse validity
-    // hint: return a boolean for validation when testing. For example:
-    bool is_valid = true; // replace with your actual validity checking
-
-    return is_valid;
-}

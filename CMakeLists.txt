@@ -22,7 +22,7 @@ include_directories(src)
 add_executable(Main
         src/main.cpp # your main file
         src/CampusCompass.cpp
-        src/CampusCompass.h
+        src/CampusCompass.hpp
         src/WeightedGraph.hpp
         src/WeightedGraph.cpp
         # add your own header files below - should be automatically added in CLion
@@ -34,7 +34,7 @@ add_executable(Main
 add_executable(Tests
         test/test.cpp # your test file
         src/CampusCompass.cpp
-        src/CampusCompass.h
+        src/CampusCompass.hpp
         src/WeightedGraph.cpp
         src/WeightedGraph.hpp
         )

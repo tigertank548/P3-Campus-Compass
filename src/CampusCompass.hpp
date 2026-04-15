@@ -7,24 +7,27 @@
 
 class CampusCompass {
 public:
-    // Think about what helper functions you will need in the algorithm
-    CampusCompass(); // constructor
-    bool parseCommand(const std::string &command);
+    CampusCompass();
+    explicit CampusCompass(const WeightedGraph& graph);
+    bool parseCommand(const std::string& command, const std::vector<std::string>& arguments);
 
     bool insert(std::string name, std::string studentID, int home, const std::unordered_set<std::string>& courseCodes);
     bool remove(const std::string& studentID);
     bool dropClass(std::string studentID, std::string classCode);
     bool replaceClass(std::string studentID, std::string dropped, std::string added);
-    bool removeClass(std::string classCode);
+    int removeClass(std::string classCode);
+    void addClass(std::string courseCode, int locationID, std::string startTime, std::string endTime);
     bool toggleEdgeClosure(int from, int to);
+    // < studentExists, id, name, home, courses
+    std::tuple<bool, std::string, std::string, int, std::unordered_set<std::string>> getStudentData(std::string id);
     // <exists, isClosed>
     std::pair<bool,bool> checkEdgeStatus(int from, int to);
     bool isConnected(int from, int to);
-    // TODO:: should this return be a string?, how will this work?
-    std::string printShortestEdges(int studentID);
-    std::string printStudentZone(int studentID);
+    std::vector<std::string> printShortestEdges(std::string studentID);
+    int printStudentZone(std::string studentID);
 
-    //std::string verifySchedule(int studentID);
+    // list of course code and whether it was successful, it will be in order of class times
+    std::vector<std::pair<std::string,bool>> verifySchedule(std::string studentID);
 
 
 private:

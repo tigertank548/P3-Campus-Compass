@@ -64,3 +64,8 @@ bool WeightedGraph::parseCSV(const std::string &edges_filepath, const std::strin
 
     return true;
 }
+
+bool WeightedGraph::nodeExists(int id) {
+    return nodes.find(id) != nodes.end();
+}
+

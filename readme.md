@@ -234,17 +234,18 @@ Catch2 uses its own main function, and as such having your class and function de
 ```
 
 and the `add_executable()` blocks in `CMakeLists.txt` would look like:
+
 ```cmake
 add_executable(Main
         src/main.cpp
-        src/CampusCompass.h src/CampusCompass.cpp
-        )
-        
+        src/CampusCompass.hpp src/CampusCompass.cpp
+)
+
 # These tests can use the Catch2-provided main
 add_executable(Tests
         test/test.cpp
-        src/CampusCompass.h src/CampusCompass.cpp
-        )
+        src/CampusCompass.hpp src/CampusCompass.cpp
+)
 ```
 
 ## `<catch2/catch_test_macros.hpp>` not found in CLion
