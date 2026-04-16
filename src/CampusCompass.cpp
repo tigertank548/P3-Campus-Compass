@@ -17,6 +17,11 @@ CampusCompass::CampusCompass(const WeightedGraph& graph) {
     parseClassesCSV("../data/classes.csv");
 }
 
+bool CampusCompass::parseCommand(const std::string& command, const std::vector<std::string>& arguments) {
+
+    return true;
+}
+
 
 bool CampusCompass::insert(std::string name, std::string studentID, const int home, const std::unordered_set<std::string>& courseCodes) {
     if (studentID.length() != 8)
