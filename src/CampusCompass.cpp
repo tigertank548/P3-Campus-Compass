@@ -7,10 +7,14 @@
 
 
 CampusCompass::CampusCompass() {
-    parseCSV("../data/edges.csv","../data/classes.csv");
+    const std::string edgesFilePath = "../data/edges.csv";
+    const std::string classesFilePath = "../data/classes.csv";
+    parseClassesCSV(classesFilePath);
+    graph.parseEdgesCSV(edgesFilePath);
 }
 CampusCompass::CampusCompass(const WeightedGraph& graph) {
     this->graph = graph;
+    parseClassesCSV("../data/classes.csv");
 }
 
 
@@ -56,9 +60,9 @@ bool CampusCompass::remove(const std::string& studentID) {
 
 
 
-bool CampusCompass::parseCSV(const std::string &edges_filepath, const std::string &classes_filepath) {
+bool CampusCompass::parseClassesCSV(const std::string& classesFilePath) {
 
-    std::ifstream input = std::ifstream(classes_filepath);
+    std::ifstream input = std::ifstream(classesFilePath);
     std::string line;
 
     std::getline(input, line); // discards headers
@@ -83,6 +87,6 @@ bool CampusCompass::parseCSV(const std::string &edges_filepath, const std::strin
         }
     }
 
-    return graph.parseCSV(edges_filepath,classes_filepath);
+    return true;
 }
 

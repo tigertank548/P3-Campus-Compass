@@ -36,8 +36,8 @@ bool WeightedGraph::insert(int from, int to, std::string fromValue, std::string 
 }
 
 
-bool WeightedGraph::parseCSV(const std::string &edges_filepath, const std::string &classes_filepath) {
-    std::ifstream input(edges_filepath);
+bool WeightedGraph::parseEdgesCSV(const std::string& edgesFilePath) {
+    std::ifstream input(edgesFilePath);
 
     std::string line;
     std::getline(input, line);//discards headers

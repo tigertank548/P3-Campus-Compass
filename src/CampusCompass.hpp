@@ -18,8 +18,10 @@ public:
     int removeClass(std::string classCode);
     void addClass(std::string courseCode, int locationID, std::string startTime, std::string endTime);
     bool toggleEdgeClosure(int from, int to);
-    // < studentExists, id, name, home, courses
+    // < studentExists, id, name, home, courses >
     std::tuple<bool, std::string, std::string, int, std::unordered_set<std::string>> getStudentData(std::string id);
+    // < courseExists, courseCode, location, startTime, endTime >
+    std::tuple<bool, std::string, int, std::string, std::string> getCourseData(std::string id);
     // <exists, isClosed>
     std::pair<bool,bool> checkEdgeStatus(int from, int to);
     bool isConnected(int from, int to);
@@ -31,7 +33,7 @@ public:
 
 
 private:
-    bool parseCSV(const std::string &edges_filepath, const std::string &classes_filepath);
+    bool parseClassesCSV(const std::string &classesFilePath);
 
 
     WeightedGraph graph;
