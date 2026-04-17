@@ -18,8 +18,46 @@ CampusCompass::CampusCompass(const WeightedGraph& graph) {
 }
 
 bool CampusCompass::parseCommand(const std::string& command, const std::vector<std::string>& arguments) {
+    if (command == "insert") {
+        const std::string& name = arguments[0];
+        const std::string& studentID = arguments[1];
+        const std::string& homeIDString = arguments[2];
+        const std::string& nString = arguments [3];
+        std::unordered_set<std::string> studentCourses;
+        int homeID, n;
 
-    return true;
+        try {
+            n = std::stoi(nString);
+            homeID = std::stoi(homeIDString);
+        }catch (std::invalid_argument& e) {
+            return false;
+        }
+        if (n + 4 != arguments.size())
+            return false;
+
+        for (int i = 4; i < n+4; i++)
+            studentCourses.insert(arguments[i]);
+
+        if (studentCourses.size() != n)
+            return false;
+
+        return insert(name,studentID,homeID,studentCourses);
+    }if (command == "remove") {
+        if (arguments.size() != 1)
+            return false;
+        return remove(arguments[0]);
+    }if (command == "dropClass") {
+        if (arguments.size() != 2)
+            return false;
+
+        return dropClass(arguments[0], arguments[1]);
+    }if (command == "replaceClass") {
+        if (arguments.size() != 3)
+            return false;
+
+        return replaceClass(arguments[0],arguments[1],arguments[2]);
+    }if (command == "")
+    return false;
 }
 
 
