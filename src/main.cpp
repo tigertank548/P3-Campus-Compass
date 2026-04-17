@@ -35,10 +35,10 @@ int main() {
             }
             arguments.push_back(current);
         }
-        bool result = compass.parseCommand(command, arguments);
-        if (result)
+        int result = compass.parseCommand(command, arguments);
+        if (result == 1)
             std::cout << "successful" << std::endl;
-        else
+        else if (result == 0)
             std::cout << "unsuccessful" << std::endl;
     }
 

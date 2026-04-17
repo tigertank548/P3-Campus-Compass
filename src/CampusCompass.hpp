@@ -9,7 +9,7 @@ class CampusCompass {
 public:
     CampusCompass();
     explicit CampusCompass(const WeightedGraph& graph);
-    bool parseCommand(const std::string& command, const std::vector<std::string>& arguments);
+    int parseCommand(const std::string& command, const std::vector<std::string>& arguments);
 
     bool insert(std::string name, std::string studentID, int home, const std::unordered_set<std::string>& courseCodes);
     bool remove(const std::string& studentID);
