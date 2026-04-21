@@ -46,7 +46,7 @@ private:
         // Ownership of the nodes is done by graph, there is no need for a destructor here.
         // I don't think it would make it any cleaner here.
 
-        // map of <id, <isClosed, weight, Node>> TODO:: Consider if using an ordered map / priority queue is better
+        // map of <id, <isClosed, weight, Node>>
         std::unordered_map<int, std::tuple<bool, int, Node*>> nextNodes;
 
         Node(const int id, const std::string& value) {
