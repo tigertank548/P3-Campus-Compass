@@ -14,13 +14,47 @@ CampusCompass::CampusCompass() {
     parseClassesCSV(classesFilePath);
     graph.parseEdgesCSV(edgesFilePath);
 }
+
 CampusCompass::CampusCompass(const WeightedGraph& graph) {
     this->graph = graph;
     parseClassesCSV("../data/classes.csv");
 }
 
+CampusCompass::CampusCompass(CampusCompass& other) {
+    graph = other.graph;
+    students = other.students;
+    courses = other.courses;
+}
+CampusCompass::CampusCompass(CampusCompass&& other) noexcept {
+    graph = std::move(other.graph);
+    students = std::move(other.students);
+    courses = std::move(other.courses);
+}
+CampusCompass& CampusCompass::operator=(const CampusCompass& other) {
+    if (this == &other)
+        return *this;
+    graph = other.graph;
+    students = other.students;
+    courses = other.courses;
+   return *this;
+}
+CampusCompass& CampusCompass::operator=(CampusCompass&& other) noexcept {
+    if (this == &other)
+        return *this;
+    graph = std::move(other.graph);
+    students = std::move(other.students);
+    courses = std::move(other.courses);
+    return *this;
+}
+CampusCompass::~CampusCompass() {
+    for (const std::pair<std::string, Student*> pair : students)
+        delete pair.second;
+}
+
 int CampusCompass::parseCommand(const std::string& command, const std::vector<std::string>& arguments) {
     if (command == "insert") {
+        if (arguments.size() < 4)
+            return 0;
         const std::string& name = arguments[0];
         const std::string& studentID = arguments[1];
         const std::string& homeIDString = arguments[2];
@@ -34,13 +68,13 @@ int CampusCompass::parseCommand(const std::string& command, const std::vector<st
         }catch (std::invalid_argument& e) {
             return 0;
         }
-        if (n + 4 != arguments.size())
+        if (n + 4 != static_cast<int>(arguments.size()))
             return 0;
 
         for (int i = 4; i < n+4; i++)
             studentCourses.insert(arguments[i]);
 
-        if (studentCourses.size() != n)
+        if (static_cast<int>(studentCourses.size()) != n)
             return 0;
 
         return insert(name,studentID,homeID,studentCourses) ? 1 : 0;
@@ -66,11 +100,10 @@ int CampusCompass::parseCommand(const std::string& command, const std::vector<st
     }if (command == "toggleEdgesClosure") {
         std::vector<std::pair<int,int>> edgesToToggle;
         try {
-            int n;
-            n = std::stoi(arguments[0]);
-            if (arguments.size() - 1 != n)
+            const int n = std::stoi(arguments[0]);
+            if (static_cast<int>(arguments.size() - 1) != n)
                 return 0;
-            for (int i = 1; i < arguments.size(); i+=2)
+            for (std::size_t i = 1; i < arguments.size(); i+=2)
                 edgesToToggle.emplace_back(std::stoi(arguments[i]), std::stoi(arguments[i+1]));
         }catch (std::invalid_argument& e) {
             return 0;
@@ -119,7 +152,10 @@ int CampusCompass::parseCommand(const std::string& command, const std::vector<st
     }if (command == "printShortestEdges") {
         if (arguments.size() != 1)
             return 0;
-        std::vector<std::string> times = printShortestEdges(arguments[0]);
+        if (students.find(arguments[0]) == students.end())
+            return 0;
+
+        const std::vector<std::string> times = printShortestEdges(arguments[0]);
 
         std::cout << "Time For Shortest Edges: " << students[arguments[0]]->name << std::endl;
         for (std::string s : times)
@@ -128,11 +164,15 @@ int CampusCompass::parseCommand(const std::string& command, const std::vector<st
     }if (command == "printStudentZone") {
         if (arguments.size() != 1)
             return 0;
+        if (students.find(arguments[0]) == students.end())
+            return 0;
 
         std::cout << "Student Zone Cost For " << students[arguments[0]]->name << ":" << printStudentZone(arguments[0]) << std::endl;
         return -1;
     }if (command == "verifySchedule") {
         if (arguments.size() != 1)
+            return 0;
+        if (students.find(arguments[0]) == students.end())
             return 0;
 
         std::vector<std::pair<std::string,bool>> result = verifySchedule(arguments[0]);
@@ -142,14 +182,13 @@ int CampusCompass::parseCommand(const std::string& command, const std::vector<st
 
         std::cout << "Schedule Check for " << students[arguments[0]]->name << ":" << std::endl;
 
-        for (std::pair<std::string,bool> pair : result) {
+        for (const std::pair<std::string,bool>& pair : result) {
             std::cout << pair.first << ": " << (pair.second ? "successful" : "unsuccessful") << std::endl;
         }
         return -1;
     }
     return 0;
 }
-
 
 bool CampusCompass::insert(std::string name, std::string studentID, const int home, const std::unordered_set<std::string>& courseCodes) {
     if (studentID.length() != 8)
@@ -161,7 +200,7 @@ bool CampusCompass::insert(std::string name, std::string studentID, const int ho
         return std::isalpha(letter) || letter == ' ';
     }) && !name.empty())
         return false;
-    if (courseCodes.size() < 1 || courseCodes.size() > 6)
+    if (courseCodes.empty() || courseCodes.size() > 6)
         return false;
     if (!graph.nodeExists(home))
         return false;
@@ -171,11 +210,14 @@ bool CampusCompass::insert(std::string name, std::string studentID, const int ho
         return false;
 
     // courses exist
-    for (std::string course : courseCodes)
+    for (const std::string& course : courseCodes)
         if (courses.find(course) == courses.end())
             return false;
 
     students[studentID] = new Student{studentID, name, home, courseCodes};
+    for (const std::string& course : courseCodes)
+        courses[course].students.insert(students[studentID]);
+
     return true;
 }
 
@@ -191,7 +233,180 @@ bool CampusCompass::remove(const std::string& studentID) {
     return true;
 }
 
+bool CampusCompass::dropClass(const std::string& studentID, const std::string& classCode) {
+    if (students.find(studentID) == students.end())
+        return false;
 
+    Student* student = students[studentID];
+
+    if (student->courses.find(classCode) == student->courses.end())
+        return false;
+
+    student->courses.erase(classCode);
+    courses[classCode].students.erase(student);
+
+    if (student->courses.empty()) {
+        students.erase(studentID);
+        delete student;
+    }
+
+    return true;
+}
+
+bool CampusCompass::replaceClass(const std::string& studentID, const std::string& dropped, const std::string& added) {
+    if (students.find(studentID) == students.end())
+        return false;
+
+    Student* student = students[studentID];
+
+    if (student->courses.find(dropped) == student->courses.end())
+        return false;
+    if (courses.find(added) == courses.end())
+        return false;
+
+    student->courses.erase(dropped);
+    courses[dropped].students.erase(student);
+
+    student->courses.insert(added);
+    courses[added].students.insert(student);
+
+    return true;
+}
+
+int CampusCompass::removeClass(const std::string& classCode) {
+    if (courses.find(classCode) == courses.end())
+        return -1;
+
+    for (Student* student : courses[classCode].students)
+        student->courses.erase(classCode);
+
+    const int out = courses[classCode].students.size();
+    courses[classCode].students.clear();
+    return out;
+}
+
+void CampusCompass::addClass(const std::string& courseCode,const int& locationID,const std::string& startTime,const std::string& endTime) {
+    courses[courseCode] = {courseCode, locationID, startTime, endTime, {}};
+}
+
+bool CampusCompass::toggleEdgeClosure(int from, int to) {
+    return graph.toggleEdgeClosure(from,to);
+}
+
+std::tuple<bool, std::string, std::string, int, std::unordered_set<std::string>> CampusCompass::getStudentData(const std::string& id) {
+    if (students.find(id) == students.end())
+        return {false,"","",0,{}};
+
+    Student* student = students[id];
+    return {true, student->studentID, student->name, student->homeID, student->courses};
+}
+
+std::tuple<bool, std::string, int, std::string, std::string> CampusCompass::getCourseData(const std::string& id) {
+    if (courses.find(id) == courses.end())
+        return {false, "", 0, "", ""};
+
+    Course* course = &courses[id];
+    return {true, course->courseCode, course->location, course->startTime, course->endTime};
+}
+
+std::pair<bool, bool> CampusCompass::checkEdgeStatus(const int from, const int to) {
+    return graph.checkEdgeStatus(from,to);
+}
+
+bool CampusCompass::isConnected(int from, int to) {
+    return graph.isConnected(from, to);
+}
+
+std::vector<std::string> CampusCompass::printShortestEdges(const std::string& studentID) {
+    if (students.find(studentID) == students.end())
+        return {};
+
+    Student* student = students[studentID];
+
+    std::unordered_map<int, std::pair<int,int>> result = graph.dijkstras(student->homeID);
+
+    std::vector<std::string> out;
+
+    for (const std::string& course : student->courses)
+        out.push_back(course + ": " + std::to_string(result[courses[course].location].first));
+
+    std::sort(out.begin(), out.end());
+
+    return out;
+}
+
+int CampusCompass::printStudentZone(const std::string& studentID) {
+    if (students.find(studentID) == students.end())
+        return -1;
+
+    std::unordered_set<int> nodes;
+
+    nodes.insert(students[studentID]->homeID);
+
+    for (const std::string& course : students[studentID]->courses)
+        nodes.insert(courses[course].location);
+
+    return graph.mstOfNodes(nodes);
+}
+
+std::vector<std::pair<std::string, bool>> CampusCompass::verifySchedule(const std::string& studentID) {
+    if (students.find(studentID) == students.end())
+        return {};
+
+    Student* student  = students[studentID];
+
+    if (student->courses.size() == 1)
+        return {};
+
+    struct courseTime {
+        int startTime;
+        int endTime;
+        std::string course;
+
+
+        bool operator>(const courseTime& other) const {
+            return startTime > other.startTime;
+        }
+        bool operator<(const courseTime& other) const {
+            return startTime < other.startTime;
+        }
+        bool operator>=(const courseTime& other) const {
+            return startTime >= other.startTime;
+        }
+        bool operator<=(const courseTime& other) const {
+            return startTime < other.startTime;
+        }
+    };
+
+    std::vector<courseTime> times;
+    for (const std::string& course : student->courses) {
+        const Course& c = courses[course];
+
+        std::string startString = c.startTime;
+        std::string endString = c.startTime;
+
+        int startTime = std::stoi(startString.substr(0,2))*60 + std::stoi(startString.substr(3,2));
+        int endTime = std::stoi(endString.substr(0,2))*60 + std::stoi(endString.substr(3,2));
+        times.push_back({startTime,endTime,course});
+    }
+
+    std::sort(times.begin(), times.end());
+
+    std::vector<std::pair<std::string,bool>> out;
+
+    for (std::size_t i = 0; i < times.size() - 1; i++) {
+        const Course& currentClass = courses[times[i].course];
+        const Course& nextClass = courses[times[i + 1].course];
+        int timeToWalk = graph.dijkstras(currentClass.location)[nextClass.location].first;
+        if (timeToWalk == -1)
+            out.emplace_back(times[i].course + " - " + times[i + 1].course, false);
+        else if (timeToWalk > times[i + 1].startTime - times[i].endTime)
+            out.emplace_back(times[i].course + " - " + times[i + 1].course, false);
+        else
+            out.emplace_back(times[i].course + " - " + times[i + 1].course, true);
+    }
+    return out;
+}
 
 bool CampusCompass::parseClassesCSV(const std::string& classesFilePath) {
 
@@ -211,10 +426,15 @@ bool CampusCompass::parseClassesCSV(const std::string& classesFilePath) {
         std::getline(lineStream, startTime, ',');
         std::getline(lineStream, endTime, ',');
 
+        // Makes sure that there are no \r or other wacky end characters
+        while (endTime.size() != 5)
+            endTime.pop_back();
+
+
         try {
             if (courses.find(course) != courses.end())
                 return false;
-            courses[course] = {course, std::stoi(location), startTime, endTime};
+            courses[course] = {course, std::stoi(location), startTime, endTime, {}};
         }catch (const std::invalid_argument& e) {
             return false;
         }

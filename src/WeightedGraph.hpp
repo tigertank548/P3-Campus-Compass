@@ -2,35 +2,36 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 
 class WeightedGraph {
 public:
     WeightedGraph();
 
-    bool toggleEdgeClosure(int from, int to);
+    bool toggleEdgeClosure(const int from, const int to);
+    // <exists, isClosed>
     std::pair<bool,bool> checkEdgeStatus(int from, int to);
     // <locationID, <distance, prevLocationID>>
     std::unordered_map<int, std::pair<int, int>> dijkstras(int from);
+    int mstOfNodes(const std::unordered_set<int>& subNodes);
 
     bool isConnected(int from, int to);
 
-    bool insert(int from, int to, std::string fromValue, std::string toValue, int weight);
+    bool insert(int from, int to, const std::string& fromValue, const std::string& toValue, int weight);
 
-    // returns if the edge is closed and what the weight is
+    // < isClosed, weight>
     std::pair<bool, int> checkEdge(int from, int to);
+
     std::string getNodeName(int id);
 
     bool nodeExists(int id);
 
     bool parseEdgesCSV(const std::string& edgesFilePath);
 
-    //TODO:: have a function that makes the subgraph and finds a mst... i think have an mst function that takes in some sort of datastructure of node pointers.
-
-
 private:
     // < Node1<id,value>, Node2<id,value>, weight >
-    std::vector<std::tuple<std::pair<int, std::string>, std::pair<int,std::string>, int>> edgeList;
+    // std::vector<std::tuple<std::pair<int, std::string>, std::pair<int,std::string>, int>> edgeList;
 
     struct Node {
         int id;
@@ -49,11 +50,12 @@ private:
             nextNodes[next->id] = {false, weight, next};
             next->nextNodes[id] = {false, weight, this};
             return true;
-
         }
 
     };
 
     // map of all nodes with ID as key.
     std::unordered_map<int, Node*> nodes;
+
+    static int kruskals(std::vector<std::pair<int,std::pair<int,int>>> edgeList);
 };
