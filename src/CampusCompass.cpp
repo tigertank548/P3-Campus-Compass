@@ -9,15 +9,15 @@
 
 
 CampusCompass::CampusCompass() {
-    const std::string edgesFilePath = "../data/edges.csv";
-    const std::string classesFilePath = "../data/classes.csv";
+    const std::string edgesFilePath = "./data/edges.csv";
+    const std::string classesFilePath = "./data/classes.csv";
     parseClassesCSV(classesFilePath);
     graph.parseEdgesCSV(edgesFilePath);
 }
 
 CampusCompass::CampusCompass(const WeightedGraph& graph) {
     this->graph = graph;
-    parseClassesCSV("../data/classes.csv");
+    parseClassesCSV("./data/classes.csv");
 }
 
 CampusCompass::CampusCompass(CampusCompass& other) {

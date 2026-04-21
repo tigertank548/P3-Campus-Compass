@@ -1,0 +1,7 @@
+6
+insert "Student A" 10000001 1 1 COP3502
+insert "Student B" 10000002 1 1 COP3502
+insert "Student C" 10000003 1 2 COP3502 MAC2311
+dropClass 10000001 COP3502
+remove 10000001
+removeClass COP3502

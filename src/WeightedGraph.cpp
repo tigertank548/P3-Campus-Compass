@@ -31,8 +31,7 @@ WeightedGraph::WeightedGraph(const WeightedGraph& other) {
             insert(node.second->id, edge.first, node.second->value, std::get<2>(edge.second)->value, std::get<1>(edge.second));
 }
 WeightedGraph::WeightedGraph(WeightedGraph&& other) noexcept {
-    nodes = other.nodes;
-    other.nodes = std::unordered_map<int, Node*>();
+    nodes = std::move(other.nodes);
 }
 WeightedGraph& WeightedGraph::operator=(const WeightedGraph& other) {
     if (this == &other)
@@ -51,8 +50,7 @@ WeightedGraph& WeightedGraph::operator=(WeightedGraph&& other) noexcept {
 
     clearNodes();
 
-    nodes = other.nodes;
-    other.nodes = std::unordered_map<int, Node*>();
+    nodes = std::move(other.nodes);
     return *this;
 }
 WeightedGraph::~WeightedGraph() {
