@@ -1,0 +1,8 @@
+7
+insert "Brandon" 45679999 20 2 COP3530 MAC2311
+insert "Brian" 35459999 21 3 COP3530 CDA3101 MAC2311
+insert "Briana" 87879999 22 3 CDA3101 MAC2311 EEL3701
+removeClass COP3530
+remove 87879999
+removeClass CDA3101
+printShortestEdges 35459999
