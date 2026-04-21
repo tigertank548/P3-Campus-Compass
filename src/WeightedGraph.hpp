@@ -7,7 +7,13 @@
 
 class WeightedGraph {
 public:
-    WeightedGraph();
+    WeightedGraph() = default;
+
+    WeightedGraph(const WeightedGraph& other);
+    WeightedGraph(WeightedGraph&& other) noexcept ;
+    WeightedGraph& operator=(const WeightedGraph& other);
+    WeightedGraph& operator=(WeightedGraph&& other) noexcept ;
+    ~WeightedGraph();
 
     bool toggleEdgeClosure(const int from, const int to);
     // <exists, isClosed>
@@ -37,6 +43,9 @@ private:
         int id;
         std::string value;
 
+        // Ownership of the nodes is done by graph, there is no need for a destructor here.
+        // I don't think it would make it any cleaner here.
+
         // map of <id, <isClosed, weight, Node>> TODO:: Consider if using an ordered map / priority queue is better
         std::unordered_map<int, std::tuple<bool, int, Node*>> nextNodes;
 
@@ -58,4 +67,6 @@ private:
     std::unordered_map<int, Node*> nodes;
 
     static int kruskals(std::vector<std::pair<int,std::pair<int,int>>> edgeList);
+
+    void clearNodes();
 };

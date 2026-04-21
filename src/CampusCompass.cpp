@@ -22,8 +22,10 @@ CampusCompass::CampusCompass(const WeightedGraph& graph) {
 
 CampusCompass::CampusCompass(CampusCompass& other) {
     graph = other.graph;
-    students = other.students;
     courses = other.courses;
+
+    for (const std::pair<std::string, Student*> student : other.students)
+        students[student.second->studentID] = new Student(*student.second);
 }
 CampusCompass::CampusCompass(CampusCompass&& other) noexcept {
     graph = std::move(other.graph);
@@ -34,13 +36,22 @@ CampusCompass& CampusCompass::operator=(const CampusCompass& other) {
     if (this == &other)
         return *this;
     graph = other.graph;
-    students = other.students;
     courses = other.courses;
+
+    for (const auto& pair : students) 
+        delete pair.second;
+    students.clear();
+
+    for (const std::pair<std::string, Student*> student : other.students)
+        students[student.second->studentID] = new Student(*student.second);
    return *this;
 }
 CampusCompass& CampusCompass::operator=(CampusCompass&& other) noexcept {
     if (this == &other)
         return *this;
+    for (const auto& pair : students) 
+        delete pair.second;
+    
     graph = std::move(other.graph);
     students = std::move(other.students);
     courses = std::move(other.courses);
@@ -219,6 +230,7 @@ bool CampusCompass::insert(std::string name, std::string studentID, const int ho
         if (courses.find(course) == courses.end())
             return false;
 
+    delete students[studentID];
     students[studentID] = new Student{studentID, name, home, courseCodes};
     for (const std::string& course : courseCodes)
         courses[course].students.insert(students[studentID]);

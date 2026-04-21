@@ -6,8 +6,7 @@
 #include <sstream>
 #include <stack>
 
-WeightedGraph::WeightedGraph() {
-}
+
 
 std::pair<bool, int> WeightedGraph::checkEdge(const int from, const int to) {
     if (nodes.find(from) == nodes.end() || nodes.find(to) == nodes.end())
@@ -23,6 +22,42 @@ std::string WeightedGraph::getNodeName(const int id) {
     return nodes[id]->value;
 }
 
+
+WeightedGraph::WeightedGraph(const WeightedGraph& other) {
+    // go through every edge and insert a copy... it's slow and bad, but I don't know if there's a better way
+    // maybe with that edge list I have commented out, but I already got rid of it, it's gone now
+    for (const std::pair<int, Node*> node : other.nodes)
+        for (const std::pair<int, std::tuple<bool, int, Node*>> edge : node.second->nextNodes)
+            insert(node.second->id, edge.first, node.second->value, std::get<2>(edge.second)->value, std::get<1>(edge.second));
+}
+WeightedGraph::WeightedGraph(WeightedGraph&& other) noexcept {
+    nodes = other.nodes;
+    other.nodes = std::unordered_map<int, Node*>();
+}
+WeightedGraph& WeightedGraph::operator=(const WeightedGraph& other) {
+    if (this == &other)
+        return *this;
+
+    clearNodes();
+
+    for (const std::pair<int, Node*> node : other.nodes)
+        for (const std::pair<int, std::tuple<bool, int, Node*>> edge : node.second->nextNodes)
+            insert(node.second->id, edge.first, node.second->value, std::get<2>(edge.second)->value, std::get<1>(edge.second));
+    return *this;
+}
+WeightedGraph& WeightedGraph::operator=(WeightedGraph&& other) noexcept {
+    if (this == &other)
+        return *this;
+
+    clearNodes();
+
+    nodes = other.nodes;
+    other.nodes = std::unordered_map<int, Node*>();
+    return *this;
+}
+WeightedGraph::~WeightedGraph() {
+    clearNodes();
+}
 
 bool WeightedGraph::toggleEdgeClosure(const int from, const int to) {
     if (nodes.find(from) == nodes.end() || nodes.find(to) == nodes.end())
@@ -244,6 +279,12 @@ int WeightedGraph::kruskals(std::vector<std::pair<int, std::pair<int, int>>> edg
     }
 
     return total;
+}
+
+void WeightedGraph::clearNodes() {
+    for (const std::pair<int, Node*> node : nodes)
+        delete node.second;
+    nodes.clear();// need to make sure they don't get accessed
 }
 
 bool WeightedGraph::nodeExists(int id) {
