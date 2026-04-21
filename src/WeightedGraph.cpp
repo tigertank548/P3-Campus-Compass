@@ -19,13 +19,15 @@ std::pair<bool, int> WeightedGraph::checkEdge(const int from, const int to) {
 
 std::string WeightedGraph::getNodeName(const int id) {
     if (nodes.find(id) == nodes.end())
-        return "";
+        return "NULL";
     return nodes[id]->value;
 }
 
 
 bool WeightedGraph::toggleEdgeClosure(const int from, const int to) {
     if (nodes.find(from) == nodes.end() || nodes.find(to) == nodes.end())
+        return false;
+    if (nodes[from]->nextNodes.find(to) == nodes[from]->nextNodes.end() || nodes[to]->nextNodes.find(from) == nodes[to]->nextNodes.end())
         return false;
     std::get<0>(nodes[from]->nextNodes[to]) = !std::get<0>(nodes[from]->nextNodes[to]);
     std::get<0>(nodes[to]->nextNodes[from]) = !std::get<0>(nodes[to]->nextNodes[from]);
@@ -93,7 +95,7 @@ int WeightedGraph::mstOfNodes(const std::unordered_set<int>& subNodes) {
     std::unordered_set<int> allSubNodes;
     // O(V)
     for (int node : subNodes) {
-        while (allSubNodes.find(node) != allSubNodes.end()) {
+        while (node != -1 && allSubNodes.find(node) == allSubNodes.end()) {
             allSubNodes.insert(node);
             node = result[node].second;
         }
@@ -114,6 +116,7 @@ int WeightedGraph::mstOfNodes(const std::unordered_set<int>& subNodes) {
             if (allSubNodes.find(next.first) != allSubNodes.end() && visited.find(next.first) == visited.end())
                 edgeList.push_back({std::get<1>(next.second), {node, next.first}});
         }
+        visited.insert(node);
     }
 
     return kruskals(edgeList);
@@ -123,6 +126,9 @@ int WeightedGraph::mstOfNodes(const std::unordered_set<int>& subNodes) {
 bool WeightedGraph::isConnected(int from, int to) {
     if (nodes.find(from) == nodes.end() || nodes.find(to) == nodes.end())
         return false;
+    if (from == to)
+        return true;
+
 
     std::unordered_set<int> visited;
     std::stack<int> stack;
@@ -134,6 +140,8 @@ bool WeightedGraph::isConnected(int from, int to) {
         for (const std::pair<int, std::tuple<bool, int, Node*>> next : nodes[current]->nextNodes) {
             int num = std::get<2>(next.second)->id;
             if (visited.find(num) != visited.end())
+                continue;
+            if (std::get<0>(next.second))
                 continue;
             if (num == to)
                 return true;
@@ -209,7 +217,7 @@ int WeightedGraph::kruskals(std::vector<std::pair<int, std::pair<int, int>>> edg
             const int num2Parent = find(num2);
             if (num1Parent == num2Parent)
                 return;
-            const int bigger = parents[num1Parent].second > parents[num2Parent].second ? num1Parent : num2Parent;
+            const int bigger = parents[num1Parent].second >= parents[num2Parent].second ? num1Parent : num2Parent;
             const int smaller = parents[num1Parent].second < parents[num2Parent].second ? num1Parent : num2Parent;
             parents[smaller].first = bigger;
             parents[bigger].second += parents[smaller].second;

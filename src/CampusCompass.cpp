@@ -95,8 +95,13 @@ int CampusCompass::parseCommand(const std::string& command, const std::vector<st
     }if (command == "removeClass") {
         if (arguments.size() != 1)
             return 0;
+        const int result = removeClass(arguments[0]);
+        if (result == -1 || result == 0)
+            return 0;
 
-        return removeClass(arguments[0]);
+        std::cout << result << std::endl;
+
+        return -1;
     }if (command == "toggleEdgesClosure") {
         std::vector<std::pair<int,int>> edgesToToggle;
         try {
@@ -261,6 +266,8 @@ bool CampusCompass::replaceClass(const std::string& studentID, const std::string
 
     if (student->courses.find(dropped) == student->courses.end())
         return false;
+    if (student->courses.find(added) != student->courses.end())
+        return false;
     if (courses.find(added) == courses.end())
         return false;
 
@@ -277,10 +284,17 @@ int CampusCompass::removeClass(const std::string& classCode) {
     if (courses.find(classCode) == courses.end())
         return -1;
 
-    for (Student* student : courses[classCode].students)
+    for (auto iter = students.begin(); iter != students.end();) {
+        Student* student = iter->second;
         student->courses.erase(classCode);
+        if (student->courses.empty()) {
+            iter = students.erase(iter);
+            delete student;
+        }else
+            ++iter;
+    }
 
-    const int out = courses[classCode].students.size();
+    const int out = static_cast<int>(courses[classCode].students.size());
     courses[classCode].students.clear();
     return out;
 }
@@ -327,8 +341,12 @@ std::vector<std::string> CampusCompass::printShortestEdges(const std::string& st
 
     std::vector<std::string> out;
 
-    for (const std::string& course : student->courses)
-        out.push_back(course + ": " + std::to_string(result[courses[course].location].first));
+    for (const std::string& course : student->courses) {
+        if (result.find(courses[course].location) == result.end())
+            out.push_back(course + ": -1");
+        else
+            out.push_back(course + ": " + std::to_string(result[courses[course].location].first));
+    }
 
     std::sort(out.begin(), out.end());
 
@@ -383,7 +401,7 @@ std::vector<std::pair<std::string, bool>> CampusCompass::verifySchedule(const st
         const Course& c = courses[course];
 
         std::string startString = c.startTime;
-        std::string endString = c.startTime;
+        std::string endString = c.endTime;
 
         int startTime = std::stoi(startString.substr(0,2))*60 + std::stoi(startString.substr(3,2));
         int endTime = std::stoi(endString.substr(0,2))*60 + std::stoi(endString.substr(3,2));
@@ -397,7 +415,12 @@ std::vector<std::pair<std::string, bool>> CampusCompass::verifySchedule(const st
     for (std::size_t i = 0; i < times.size() - 1; i++) {
         const Course& currentClass = courses[times[i].course];
         const Course& nextClass = courses[times[i + 1].course];
-        int timeToWalk = graph.dijkstras(currentClass.location)[nextClass.location].first;
+        std::unordered_map<int, std::pair<int,int>> result = graph.dijkstras(currentClass.location);
+        int timeToWalk;
+        if (result.find(nextClass.location) == result.end())
+            timeToWalk = -1;
+        else
+            timeToWalk = result[nextClass.location].first;
         if (timeToWalk == -1)
             out.emplace_back(times[i].course + " - " + times[i + 1].course, false);
         else if (timeToWalk > times[i + 1].startTime - times[i].endTime)
